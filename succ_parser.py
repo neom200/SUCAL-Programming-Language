@@ -70,7 +70,7 @@ class Parser:
                     self.current_token.pos_start, self.current_token.pos_end,
                     "Expected ')'"
                 ))
-
+                
         return res.failure(InvalidSyntaxtError(
             tok.pos_start, tok.pos_end, "Expected int or float \n"
         ))

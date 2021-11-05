@@ -14,7 +14,7 @@ TT_EOF = 'EOF'
 class Token:
     def __init__(self, tipo, valor=None, pos_start=None, pos_end=None):
         self.type = tipo
-        self.valor = valor
+        self.value = valor
 
         if pos_start: 
             self.pos_start = pos_start.copy()
@@ -25,6 +25,6 @@ class Token:
             self.pos_end = pos_end.copy()
 
     def __repr__(self):
-        if self.valor: return f'{self.type}:{self.valor}'
+        if self.value: return f'{self.type}:{self.value}'
         return f'{self.type}'
 

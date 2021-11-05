@@ -1,5 +1,7 @@
 from lexer import Lexer
 from succ_parser import Parser
+from intepreter import Interpreter
+import sys
 
 def run(fn, text):
     # Generate tokens
@@ -10,18 +12,49 @@ def run(fn, text):
     # Generate AST
     parser = Parser(tokens)
     ast = parser.parse()
+    if ast.error: return None, ast.error
 
-    return ast.node, ast.error
+    # Run the AST
+    interpreter = Interpreter()
+    result = interpreter.visit(ast.node)
 
+    return result.value, result.error
 
-while True:
-    text = input('sucal >> ')
+def runFromFile(filename):
+    if filename.find('.succ') == -1:
+        print(f"ERROR: {filename} doesn't have a appropriate extension")
+        return
 
-    if text == 'exit()':
-        break
+    nome = filename.split('.')[0]
+    with open(filename, 'r') as f:
+        full_text = f.read()
+        all_lines = full_text.split('\n')
 
-    result, erro = run('<stdin>', text)
+        for lines in all_lines:
+            result, erro = run(f'<{nome}>', lines)
 
-    if erro: print(erro.as_string())
-    else: print(result)
+            if erro: print(erro.as_string())
+            else: print(result)
+
+def runFromStdin():
+    while True:
+        text = input('sucal >> ')
+
+        if text == 'exit()':
+            break
+
+        result, erro = run('<stdin>', text)
+
+        if erro: print(erro.as_string())
+        else: print(result)
+
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        filename = sys.argv[1]
+    else:
+        filename = 'stdin'
     
+    if filename == 'stdin':
+        runFromStdin()
+    else:
+        runFromFile(filename)

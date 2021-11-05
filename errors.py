@@ -6,7 +6,7 @@ class Error:
         self.pos_end = pos_end
 
     def as_string(self):
-        result = f'{self.error}: {self.details}'
+        result = f'{self.error}: {self.details}\n'
         result += f'File {self.pos_start.fn}, line {self.pos_start.ln + 1}'
         return result
 
@@ -19,3 +19,7 @@ class IllegalCharError(Error):
 class InvalidSyntaxtError(Error):
     def __init__(self, pos_start, pos_end, details=''):
         super().__init__(pos_start, pos_end, 'Invalid Syntatx Error', details)
+
+class RTError(Error):
+    def __init__(self, pos_start, pos_end, details=''):
+        super().__init__(pos_start, pos_end, 'Runtime Error', details)
