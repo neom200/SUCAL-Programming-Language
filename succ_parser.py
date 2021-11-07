@@ -1,6 +1,6 @@
 from errors import InvalidSyntaxtError
-from nodes import NumberNode, BinOpNode, UnaryOpNode
-from tokens import TT_DIV, TT_POW, TT_EOF, TT_FLOAT, TT_INT, TT_LPAREN, TT_MINUS, TT_MUL, TT_PLUS, TT_RPAREN
+from nodes import *
+from tokens import TT_DIV, TT_IDENTIFIER, TT_EQ, TT_KEYWORD, TT_POW, TT_EOF, TT_FLOAT, TT_INT, TT_LPAREN, TT_MINUS, TT_MUL, TT_PLUS, TT_RPAREN
 
 class ParseResult:
     def __init__(self):
@@ -52,6 +52,10 @@ class Parser:
             res.register(self.advance())
             return res.success(NumberNode(tok))
 
+        elif tok.type in TT_IDENTIFIER:
+            res.register(self.advance())
+            return res.success(VarAccessNode(tok))
+
         elif tok.type == TT_LPAREN:
             res.register(self.advance())
             expres = res.register(self.expr())
@@ -89,6 +93,31 @@ class Parser:
         return self.binary_opeartion(self.factor, (TT_MUL, TT_DIV))
 
     def expr(self):
+        res = ParseResult()
+
+        if self.current_token.matches(TT_KEYWORD, 'VAR'):
+            res.register(self.advance())
+
+            if self.current_token.type != TT_IDENTIFIER:
+                return res.failure(InvalidSyntaxtError(
+                    self.current_token.pos_start, self.current_token.pos_end,
+                    "Expected identifier"
+                ))
+
+            var_name = self.current_token
+            res.register(self.advance())
+
+            if self.current_token.type != TT_EQ:
+                return res.failure(InvalidSyntaxtError(
+                    self.current_token.pos_start, self.current_token.pos_end,
+                    "Expected atributtion sign ('=')"
+                ))
+
+            res.register(self.advance())
+            expr = res.register(self.expr())
+            if res.error: return res
+            return res.success(VarAssignedNode(var_name, expr))
+
         return self.binary_opeartion(self.term, (TT_PLUS, TT_MINUS))
 
     def binary_opeartion(self, func_a, lis_ops, func_b=None):

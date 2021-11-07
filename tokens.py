@@ -1,8 +1,15 @@
+import string
+
 DIGITS = '0123456789'
 WHITESPACE = ' \t'
+LETTERS = string.ascii_letters
+LETTERS_DIGITS = LETTERS + DIGITS
 
 TT_INT = 'INT'
 TT_FLOAT = 'FLOAT'
+TT_IDENTIFIER = 'IDENTIFIER'
+TT_KEYWORD = 'KEYWORD'
+TT_EQ = 'EQ'
 TT_PLUS = 'PLUS'
 TT_MINUS = 'MINUS'
 TT_MUL = 'MULT'
@@ -11,6 +18,10 @@ TT_POW = 'POW'
 TT_LPAREN = 'LPAREN'
 TT_RPAREN = 'RPAREN'
 TT_EOF = 'EOF'
+
+KEYWORDS = [
+    'VAR'
+]
 
 class Token:
     def __init__(self, tipo, valor=None, pos_start=None, pos_end=None):
@@ -24,6 +35,9 @@ class Token:
             
         if pos_end: 
             self.pos_end = pos_end.copy()
+
+    def matches(self, tipo, valor):
+        return self.type == tipo and self.value == valor
 
     def __repr__(self):
         if self.value: return f'{self.type}:{self.value}'

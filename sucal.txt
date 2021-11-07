@@ -5,7 +5,8 @@ Um linguagem interpretada, de gramática moderna e simples.
 -------------------------------------------------
     # Regras gramaticais #
 
-expr : term ((PLUS|MINUS) term)*
+expr : KEYWORD:VAR IDENTIFIER EQ expr
+     : term ((PLUS|MINUS) term)*
 
 term : factor ((MUL|DIV) factor)*
 
@@ -14,5 +15,5 @@ factor : LPAREN | RPAREN
 
 power : atom (POW factor)*
 
-atom : INT|FLOAT
+atom : INT|FLOAT|IDENTIFIER
      : LPAREN expr RPAREN

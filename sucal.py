@@ -1,8 +1,12 @@
 from lexer import Lexer
 from succ_parser import Parser
 from intepreter import Interpreter
-from context import Context
+from context import Context, SymbolTable
+from numero import Number
 import sys
+
+global_symbol_table = SymbolTable()
+global_symbol_table.set("null", Number(0))
 
 def run(fn, text):
     # Generate tokens
@@ -18,6 +22,7 @@ def run(fn, text):
     # Run the AST
     interpreter = Interpreter()
     context = Context('<program>')
+    context.symbol_table = global_symbol_table
     result = interpreter.visit(ast.node, context)
 
     return result.value, result.error

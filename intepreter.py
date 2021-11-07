@@ -1,4 +1,5 @@
 #from os import error
+from errors import RTError
 from numero import Number
 from tokens import TT_DIV, TT_MINUS, TT_MUL, TT_PLUS, TT_POW
 
@@ -35,6 +36,31 @@ class Interpreter:
         return RTResult().success( 
             Number(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end)
         )
+
+    def visit_VarAccessNode(self, node, context):
+        res = RTResult()
+        var_name = node.var_name_tok.value
+        value = context.symbol_table.get(var_name)
+
+        if not value:
+            return res.failure(RTError(
+                node.pos_start, node.pos_end,
+                f"'{var_name}' is not defined",
+                context
+            ))
+
+        return res.success(value)
+
+    def visit_VarAssignedNode(self, node, context):
+        res = RTResult()
+        var_name = node.var_name_tok.value
+        value = res.register(self.visit(node.value_node, context))
+        if res.error: return res
+
+        # if context.symbol_table.get(var_name)
+
+        context.symbol_table.set(var_name, value)
+        return res.success(value)
 
     def visit_BinOpNode(self, node, context):
         res = RTResult()
