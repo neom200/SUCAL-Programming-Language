@@ -1,6 +1,6 @@
 #from os import error
 from numero import Number
-from tokens import TT_DIV, TT_LPAREN, TT_MINUS, TT_MUL, TT_PLUS, TT_RPAREN
+from tokens import TT_DIV, TT_MINUS, TT_MUL, TT_PLUS, TT_POW
 
 class RTResult:
     def __init__(self):
@@ -46,12 +46,14 @@ class Interpreter:
         error = None
         if node.op_tok.type == TT_PLUS:
             result, error = left.added_to(right)
-        if node.op_tok.type == TT_MINUS:
+        elif node.op_tok.type == TT_MINUS:
             result, error = left.subbed_by(right)
-        if node.op_tok.type == TT_MUL:
+        elif node.op_tok.type == TT_MUL:
             result, error = left.multed_by(right)
-        if node.op_tok.type == TT_DIV:
+        elif node.op_tok.type == TT_DIV:
             result, error = left.divided_by(right)
+        elif node.op_tok.type == TT_POW:
+            result, error = left.powed_by(right)
 
         if error:
             return res.failure(error)

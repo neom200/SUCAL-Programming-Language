@@ -1,6 +1,6 @@
 from errors import InvalidSyntaxtError
 from nodes import NumberNode, BinOpNode, UnaryOpNode
-from tokens import TT_DIV, TT_EOF, TT_FLOAT, TT_INT, TT_LPAREN, TT_MINUS, TT_MUL, TT_PLUS, TT_RPAREN
+from tokens import TT_DIV, TT_POW, TT_EOF, TT_FLOAT, TT_INT, TT_LPAREN, TT_MINUS, TT_MUL, TT_PLUS, TT_RPAREN
 
 class ParseResult:
     def __init__(self):
@@ -44,17 +44,11 @@ class Parser:
             ))
         return res
 
-    def factor(self):
+    def atom(self):
         res = ParseResult()
         tok = self.current_token
 
-        if tok.type in (TT_PLUS, TT_MINUS):
-            res.register(self.advance())
-            factor = res.register(self.factor())
-            if res.error: return res
-            return res.success(UnaryOpNode(tok, factor))
-
-        elif tok.type in (TT_INT, TT_FLOAT):
+        if tok.type in (TT_INT, TT_FLOAT):
             res.register(self.advance())
             return res.success(NumberNode(tok))
 
@@ -70,10 +64,26 @@ class Parser:
                     self.current_token.pos_start, self.current_token.pos_end,
                     "Expected ')'"
                 ))
-                
+
         return res.failure(InvalidSyntaxtError(
-            tok.pos_start, tok.pos_end, "Expected int or float \n"
+            tok.pos_start, tok.pos_end,
+            "Expected int, float, '+', '-' or '('"
         ))
+
+    def power(self):
+        return self.binary_opeartion(self.atom, (TT_POW, ), self.factor)
+
+    def factor(self):
+        res = ParseResult()
+        tok = self.current_token
+
+        if tok.type in (TT_PLUS, TT_MINUS):
+            res.register(self.advance())
+            factor = res.register(self.factor())
+            if res.error: return res
+            return res.success(UnaryOpNode(tok, factor))
+                
+        return self.power()
 
     def term(self):
         return self.binary_opeartion(self.factor, (TT_MUL, TT_DIV))
@@ -81,15 +91,18 @@ class Parser:
     def expr(self):
         return self.binary_opeartion(self.term, (TT_PLUS, TT_MINUS))
 
-    def binary_opeartion(self, func, lis_ops):
+    def binary_opeartion(self, func_a, lis_ops, func_b=None):
+        if func_b == None:
+            func_b = func_a
+            
         res = ParseResult()
-        left = res.register(func())
+        left = res.register(func_a())
         if res.error: return res
 
         while self.current_token.type in lis_ops:
             op_tok = self.current_token
             res.register(self.advance())
-            right = res.register(func())
+            right = res.register(func_b())
             if res.error: return res
             left = BinOpNode(left, op_tok, right)
 
