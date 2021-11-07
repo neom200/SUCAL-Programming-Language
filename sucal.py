@@ -1,6 +1,7 @@
 from lexer import Lexer
 from succ_parser import Parser
 from intepreter import Interpreter
+from context import Context
 import sys
 
 def run(fn, text):
@@ -16,7 +17,8 @@ def run(fn, text):
 
     # Run the AST
     interpreter = Interpreter()
-    result = interpreter.visit(ast.node)
+    context = Context('<program>')
+    result = interpreter.visit(ast.node, context)
 
     return result.value, result.error
 
