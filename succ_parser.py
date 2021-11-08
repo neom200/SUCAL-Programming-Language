@@ -6,20 +6,23 @@ class ParseResult:
     def __init__(self):
         self.error = None
         self.node = None
+        self.advance_count = 0
+
+    def register_advancement(self):
+        self.advance_count += 1
 
     def register(self, res):
-        if isinstance(res, ParseResult):
-            if res.error: self.error = res.error
-            return res.node
-
-        return res
+        self.advance_count += res.advance_count
+        if res.error: self.error = res.error
+        return res.node
 
     def success(self, node):
         self.node = node
         return self
 
     def failure(self, error):
-        self.error = error
+        if not self.error or self.advance_count == 0:
+            self.error = error
         return self
 
 class Parser:
@@ -49,19 +52,23 @@ class Parser:
         tok = self.current_token
 
         if tok.type in (TT_INT, TT_FLOAT):
-            res.register(self.advance())
+            res.register_advancement()
+            self.advance()
             return res.success(NumberNode(tok))
 
         elif tok.type in TT_IDENTIFIER:
-            res.register(self.advance())
+            res.register_advancement()
+            self.advance()
             return res.success(VarAccessNode(tok))
 
         elif tok.type == TT_LPAREN:
-            res.register(self.advance())
+            res.register_advancement()
+            self.advance()
             expres = res.register(self.expr())
             if res.error: return res
             if self.current_token.type == TT_RPAREN:
-                res.register(self.advance())
+                res.register_advancement()
+                self.advance()
                 return res.success(expres)
             else:
                 return res.failure(InvalidSyntaxtError(
@@ -71,7 +78,7 @@ class Parser:
 
         return res.failure(InvalidSyntaxtError(
             tok.pos_start, tok.pos_end,
-            "Expected int, float, '+', '-' or '('"
+            "Expected int, float, identifier, '+', '-' or '('"
         ))
 
     def power(self):
@@ -82,7 +89,8 @@ class Parser:
         tok = self.current_token
 
         if tok.type in (TT_PLUS, TT_MINUS):
-            res.register(self.advance())
+            res.register_advancement()
+            self.advance()
             factor = res.register(self.factor())
             if res.error: return res
             return res.success(UnaryOpNode(tok, factor))
@@ -96,7 +104,8 @@ class Parser:
         res = ParseResult()
 
         if self.current_token.matches(TT_KEYWORD, 'VAR'):
-            res.register(self.advance())
+            res.register_advancement()
+            self.advance()
 
             if self.current_token.type != TT_IDENTIFIER:
                 return res.failure(InvalidSyntaxtError(
@@ -105,7 +114,8 @@ class Parser:
                 ))
 
             var_name = self.current_token
-            res.register(self.advance())
+            res.register_advancement()
+            self.advance()
 
             if self.current_token.type != TT_EQ:
                 return res.failure(InvalidSyntaxtError(
@@ -113,12 +123,21 @@ class Parser:
                     "Expected atributtion sign ('=')"
                 ))
 
-            res.register(self.advance())
+            res.register_advancement()
+            self.advance()
             expr = res.register(self.expr())
             if res.error: return res
             return res.success(VarAssignedNode(var_name, expr))
 
-        return self.binary_opeartion(self.term, (TT_PLUS, TT_MINUS))
+        node = res.register(self.binary_opeartion(self.term, (TT_PLUS, TT_MINUS)))
+
+        if res.error:
+            return res.failure(InvalidSyntaxtError(
+                self.current_token.pos_start, self.current_token.pos_end,
+                "Expected 'VAR', int, float, indentifier, '+', '-' or '('"
+            ))
+
+        return res.success(node)
 
     def binary_opeartion(self, func_a, lis_ops, func_b=None):
         if func_b == None:
@@ -130,7 +149,8 @@ class Parser:
 
         while self.current_token.type in lis_ops:
             op_tok = self.current_token
-            res.register(self.advance())
+            res.register_advancement()
+            self.advance()
             right = res.register(func_b())
             if res.error: return res
             left = BinOpNode(left, op_tok, right)

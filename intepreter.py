@@ -49,6 +49,7 @@ class Interpreter:
                 context
             ))
 
+        value = value.copy().set_pos(node.pos_start, node.pos_end)
         return res.success(value)
 
     def visit_VarAssignedNode(self, node, context):
@@ -56,8 +57,6 @@ class Interpreter:
         var_name = node.var_name_tok.value
         value = res.register(self.visit(node.value_node, context))
         if res.error: return res
-
-        # if context.symbol_table.get(var_name)
 
         context.symbol_table.set(var_name, value)
         return res.success(value)
