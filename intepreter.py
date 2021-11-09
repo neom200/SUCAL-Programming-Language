@@ -1,7 +1,7 @@
 #from os import error
 from errors import RTError
 from numero import Number
-from tokens import TT_DIV, TT_MINUS, TT_MUL, TT_PLUS, TT_POW
+from tokens import TT_DIV, TT_KEYWORD, TT_MINUS, TT_MUL, TT_PLUS, TT_POW, TT_EE, TT_NE, TT_LT, TT_GT, TT_LTE, TT_GTE
 
 class RTResult:
     def __init__(self):
@@ -79,6 +79,22 @@ class Interpreter:
             result, error = left.divided_by(right)
         elif node.op_tok.type == TT_POW:
             result, error = left.powed_by(right)
+        elif node.op_tok.type == TT_EE:
+            result, error = left.compare_eq(right)
+        elif node.op_tok.type == TT_NE:
+            result, error = left.compare_not_eq(right)
+        elif node.op_tok.type == TT_LT:
+            result, error = left.compare_lt(right)
+        elif node.op_tok.type == TT_GT:
+            result, error = left.compare_gt(right)
+        elif node.op_tok.type == TT_LTE:
+            result, error = left.compare_lte(right)
+        elif node.op_tok.type == TT_GTE:
+            result, error = left.compare_gte(right)
+        elif node.op_tok.matches(TT_KEYWORD, "AND"):
+            result, error = left.anded_by(right)
+        elif node.op_tok.matches(TT_KEYWORD, "OR"):
+            result, error = left.ordered_by(right)
 
         if error:
             return res.failure(error)
@@ -93,6 +109,8 @@ class Interpreter:
         error = None
         if node.op_tok.type == TT_MINUS:
             number, error = number.multed_by(Number(-1))
+        elif node.op_tok.matches(TT_KEYWORD, 'NOT'):
+            number, error = number.notted()
 
         if error:
             return res.failure(error)

@@ -14,11 +14,11 @@ class IllegalCharError(Error):
     def __init__(self, pos_start, pos_end, details):
         self.pos_start = pos_start
         self.pos_end = pos_end
-        super().__init__('Illegal Character Error', details)
+        super().__init__( pos_start, pos_end, 'Illegal Character Error', details)
 
 class InvalidSyntaxtError(Error):
     def __init__(self, pos_start, pos_end, details=''):
-        super().__init__(pos_start, pos_end, 'Invalid Syntatx Error', details)
+        super().__init__(pos_start, pos_end, 'Invalid Syntax Error', details)
 
 class RTError(Error):
     def __init__(self, pos_start, pos_end, details, context):
@@ -41,3 +41,7 @@ class RTError(Error):
             ctx = ctx.parent
 
         return 'Traceback (most recent call last):\n' + result
+
+class ExpectedCharError(Error):
+    def __init__(self, pos_start, pos_end, details=''):
+        super().__init__(pos_start, pos_end, 'Expected Character', details)
